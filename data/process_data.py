@@ -1,16 +1,51 @@
 import sys
-
+import pandas as pd
+import numpy as np
+from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
-    pass
+    '''
+    Function to load the two datasets for messages and categories, merge them add the categories separately.
+   
+        Parameters:
+            messages_filepath (str): file path to messages csv file
+            categories_filepath (str): file path to categories csv file
+        
+        Returns:
+            df (DataFrame): Dataframe with the two input files merged
+    '''
+    messages = pd.read_csv(messages_filepath)
+    categories = pd.read_csv(categories_filepath)
 
+    df = messages.merge(categories, how='outer', on=['id'])
+    categories = categories['categories'].str.split(';', expand=True)
+
+    category_colnames = list(categories.iloc[0].apply(lambda x: x[:-2]))
+    categories.columns = category_colnames
+
+    for column in categories:
+        categories[column] = categories[column].apply(lambda x: x[-1:])
+        categories[column] = pd.to_numeric(categories[column])
+
+    df.drop(columns=['categories'], inplace=True)
+    df = pd.concat([df, categories], axis=1)
+
+    return df
 
 def clean_data(df):
-    pass
+    '''
+    Function to clean DataFrame (df) by removing duplicates.
+    '''
+    df.drop_duplicates(inplace=True)
+    return df
 
 
 def save_data(df, database_filename):
-    pass  
+    '''
+    Function to save the DataFrame to a SQL database.
+    '''  
+    engine = create_engine('sqlite:///DisasterResponse.db')
+    df.to_sql('Messages_and_Categories', engine, index=False)
 
 
 def main():
