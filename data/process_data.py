@@ -32,6 +32,7 @@ def load_data(messages_filepath, categories_filepath):
 
     return df
 
+
 def clean_data(df):
     '''
     Function to clean DataFrame (df) by removing duplicates.
@@ -45,7 +46,7 @@ def save_data(df, database_filename):
     Function to save the DataFrame to a SQL database.
     '''  
     engine = create_engine('sqlite:///DisasterResponse.db')
-    df.to_sql('Messages_and_Categories', engine, index=False)
+    df.to_sql('Messages_and_Categories', engine, index=False, if_exists='replace')
 
 
 def main():
@@ -76,3 +77,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
