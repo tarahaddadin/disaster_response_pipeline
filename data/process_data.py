@@ -37,6 +37,8 @@ def clean_data(df):
     '''
     Function to clean DataFrame (df) by removing duplicates.
     '''
+    df = df[df['related'].notnull()]
+    df['related'] = np.where(df['related'] == 2, 1, df['related'])
     df.drop_duplicates(inplace=True)
     return df
 
@@ -45,7 +47,7 @@ def save_data(df, database_filename):
     '''
     Function to save the DataFrame to a SQL database.
     '''  
-    engine = create_engine('sqlite:///DisasterResponse.db')
+    engine = create_engine('sqlite:///' + database_filename)
     df.to_sql('Messages_and_Categories', engine, index=False, if_exists='replace')
 
 
