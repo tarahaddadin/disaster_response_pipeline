@@ -8,7 +8,8 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-from sklearn.externals import joblib
+# from sklearn.externals import joblib
+import joblib 
 from sqlalchemy import create_engine
 
 
@@ -26,11 +27,11 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('Messages_and_Categories', con=engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -39,12 +40,15 @@ model = joblib.load("../models/your_model_name.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
-    
+    cats = df[df.columns[5:]]
+    cats_counts = cats.mean()*cats.shape[0]
+    cats_names = list(cats_counts.index)
+    nlarge_counts = cats_counts.nlargest(5)
+    nlarge_names = list(nlarge_counts.index)
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
+
     graphs = [
         {
             'data': [
@@ -63,8 +67,47 @@ def index():
                     'title': "Genre"
                 }
             }
+        },
+        {
+            'data': [
+                Bar(
+                    x=nlarge_names,
+                    y=nlarge_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Top message categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=cats_names,
+                    y=cats_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
         }
+        
     ]
+    
+    
     
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
@@ -93,7 +136,8 @@ def go():
 
 
 def main():
-    app.run(host='0.0.0.0', port=3001, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True)
+    # app.run(host='0.0.0.0', port=3001, debug=True)
 
 
 if __name__ == '__main__':
